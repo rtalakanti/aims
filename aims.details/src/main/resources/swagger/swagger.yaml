@@ -1,0 +1,823 @@
+swagger: "2.0"
+info:
+  description: "This services is a pass-through proxy service to retrieve person details from PeopleSoft system."
+  version: "1.0.0"
+  title: "Swagger Details for AIMS"
+  termsOfService: "http://swagger.io/terms/"
+  contact:
+    name: "System Integration Team"
+    url: "http://adelaide.edu.au"
+    email: "systemintegrationteam@dl.adelaide.edu.au"
+  license:
+    name: "Apache 2.0"
+    url: "http://www.apache.org/licenses/LICENSE-2.0.html"
+
+basePath: "/api/person-details/v1"
+tags:
+  - name: "person"
+    description: "This services is a pass-through proxy service to retrieve person details from PeopleSoft system"
+  - name: "student"
+    description: "This services is a pass-through proxy service to retrieve Student details from PeopleSoft system"
+  - name: "term"
+    description: "This services is a pass-through proxy service to retrieve Term reference details from PeopleSoft system"
+  - name: "case"
+    description: "This services is a pass-through proxy service to submit case details to PeopleSoft system"
+schemes:
+  - "https"
+  - "http"
+paths:
+  /person/{employeeId}:
+    get:
+      tags:
+        - "person"
+      summary: "Find person by ID"
+      description: "Return Person basic details"
+      operationId: "getPersonById"
+      produces:
+        - "application/xml"
+        - "application/json"
+      parameters:
+        - name: "employeeId"
+          in: "path"
+          description: "University id of the user in format of 1655555"
+          required: true
+          type: "string"
+      responses:
+        '200':
+          description: Successfully processed request
+          schema:
+            $ref: '#/definitions/PersonResponse'
+        '401':
+          description: You are not authorized to submit the request
+        '403':
+          description: You do not have permission to submit the request
+        '406':
+          description: Not Acceptable
+        '500':
+          description: Unable to process the request
+          schema:
+            $ref: '#/definitions/PersonErrorResponse'
+  /student/{studentId}/{termId}:
+    get:
+      tags:
+        - "student"
+      summary: "Find Student by ID"
+      description: "Returns Student Details"
+      operationId: "getStudentById"
+      produces:
+        - "application/xml"
+        - "application/json"
+      parameters:
+        - name: "studentId"
+          in: "path"
+          description: "University id of the student in format of 1655555"
+          required: true
+          type: "string"
+        - name: "termId"
+          in: "path"
+          description: "The term id for the student"
+          required: true
+          type: "string"
+      responses:
+        '200':
+          description: Successfully processed request
+          schema:
+            $ref: '#/definitions/StudentResponse'
+        '401':
+          description: You are not authorized to submit the request
+        '403':
+          description: You do not have permission to submit the request
+        '406':
+          description: Not Acceptable
+        '500':
+          description: Unable to process the request
+          schema:
+            $ref: '#/definitions/PersonErrorResponse'
+  /term/{termid}:
+    get:
+      tags:
+        - "term"
+      summary: "Find Term by ID"
+      description: "Returns the list of terms"
+      operationId: "getTermById"
+      produces:
+        - "application/xml"
+        - "application/json"
+      parameters:
+        - name: "termid"
+          in: "path"
+          description: "University id of the user in format of 1655555"
+          required: true
+          type: "string"
+      responses:
+        '200':
+          description: Successfully processed request
+          schema:
+            $ref: '#/definitions/TermResponse'
+        '401':
+          description: You are not authorized to submit the request
+        '403':
+          description: You do not have permission to submit the request
+        '406':
+          description: Not Acceptable
+        '500':
+          description: Unable to process the request
+          schema:
+            $ref: '#/definitions/PersonErrorResponse'
+  /case:
+    post:
+      tags:
+        - "case"
+      summary: "Post case details"
+      description: "Send case details"
+      operationId: "saveCaseDetails"
+      produces:
+        - "application/xml"
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "body"
+          description: "Case object that needs to be saved to target"
+          required: true
+          schema:
+            $ref: "#/definitions/CaseDetails"
+      responses:
+        '200':
+          description: Successfully processed request
+          schema:
+            $ref: '#/definitions/PersonResponse'
+        '401':
+          description: You are not authorized to submit the request
+        '403':
+          description: You do not have permission to submit the request
+        '406':
+          description: Not Acceptable
+        '500':
+          description: Unable to process the request
+          schema:
+            $ref: '#/definitions/PersonErrorResponse'
+securityDefinitions:
+  petstore_auth:
+    type: "oauth2"
+    tokenUrl: "https://sso-3scale-ha.openshift.development.adelaide.edu.au/auth/realms/uoarealm/protocol/openid-connect/token"
+    flow: "application"
+definitions:
+  Person:
+    type: object
+    required:
+      - personID
+      - firstName
+      - lastName
+      - emailId
+    properties:
+      personID:
+        type: string
+        xml:
+          name: PersonID
+      firstName:
+        type: string
+        xml:
+          name: FirstName
+      lastName:
+        type: string
+        xml:
+          name: LastName
+      emailId:
+        type: string
+        xml:
+          name: EmailAddr
+  PersonErrorResponse:
+    type: object
+    required:
+      - error
+    properties:
+      error:
+        type: string
+        xml:
+          name: Error
+    xml:
+      name: PersonErrorResponse
+      namespace: http://adelaide.edu.au/integration/app/PersonDataResponse
+  PersonResponse:
+    type: object
+    required:
+      - person
+    properties:
+      person:
+        xml:
+          name: Person
+        $ref: '#/definitions/Person'
+    xml:
+      name: PersonResponse
+      namespace: http://adelaide.edu.au/integration/app/PersonDataResponse
+  TermResponse:
+    type: object
+    required:
+      - term
+      - terms
+    properties:
+      term:
+        type: string
+        xml:
+          name: TermId
+      terms:
+        type: array
+        xml:
+          name: TermDescription
+          wrapped: true
+        items:
+          $ref: '#/definitions/Term'
+  Term:
+    type: object
+    required:
+      - termId
+      - termDesc
+    properties:
+      termId:
+        type: string
+        xml:
+          name: TermId
+      termDesc:
+        type: string
+        xml:
+          name: termDescription
+  StudentResponse:
+    type: object
+    required:
+      - studentId
+      - givenName
+      - familyName
+      - countryOfResidence
+      - enrolments
+    properties:
+      studentId:
+        type: string
+        xml:
+          name: StudentId
+      givenName:
+        type: string
+        xml:
+          name: GivenName
+      familyName:
+        type: string
+        xml:
+          name: FamilyName
+      programs:
+        $ref: "#/definitions/Programs"
+      enrolments:
+        $ref: "#/definitions/Enrolments"
+  Programs:
+    type: object
+    properties:
+      enrolment:
+        $ref: "#/definitions/Program"
+  Program:
+    type: object
+    required:
+      - program
+      - programGPA
+    properties:
+      program:
+        type: string
+        xml:
+          name: ProgramId
+      programGPA:
+        type: string
+        xml:
+          name: ProgramGPA
+  Enrolments:
+    type: object
+    properties:
+      enrolment:
+        $ref: "#/definitions/Enrolment"
+  Enrolment:
+    type: object
+    properties:
+      enrolledTerm :
+        type: string
+        xml:
+          name: EnrolledTerm
+      courseCode:
+        type: string
+        xml:
+          name: CourseCode
+      courseOfferNbr:
+        type: string
+        xml:
+          name: CourseOfferNbr
+      subjectArea:
+        type: string
+        xml:
+          name: SubjectArea
+      catalogueNbr:
+        type: string
+        xml:
+          name: CatalogueNbr
+      courseDescription:
+        type: string
+        xml:
+          name: CourseDescription
+      courseStatus:
+        type: string
+        xml:
+          name: CourseStatus
+      courseCoordinatorId:
+        type: string
+        xml:
+          name: CourseCoordinatorId
+      courseCoordinator:
+        type: string
+        xml:
+          name: CourseCoordinator
+      courseWeeks:
+        type: string
+        xml:
+          name: CourseWeeks
+  CaseDetails:
+    type: object
+    required:
+      - caseId
+      - effectiveDate
+      - effectiveSeq
+      - studentId
+      - term
+      - courseId
+      - courseOfferNbr
+      - courseStatus
+      - reporterId
+      - anotherContact
+      - allegationSource
+      - allegerId
+      - allegerGivenName
+      - allegerLastName
+      - allegerEmail
+      - programGPA
+      - assessmentType
+      - assessmentName
+      - assessmentWeight
+      - impactOfAssessment
+      - dateAssignmentSubmitted
+      - suspectedBreachType
+      - suspectedSubBreachCode
+      - descriptionOfIncident
+      - yearLevelOfStudent
+      - specificDisciplinaryConventions
+      - informationProvidedToStudent
+      - relevantCircumstances
+      - medical
+      - compassionate
+      - extenuating
+      - dateFormLodged
+      - additionalInfobeforeAIO1
+      - reasonForEdit
+      - reasonText
+    properties:
+      caseId:
+        type: string
+        xml:
+          name: CaseId
+      effectiveDate:
+        type: string
+        xml:
+          name: EffectiveDate
+      effectiveSeq:
+        type: string
+        xml:
+          name: EffectiveSeq
+      studentId:
+        type: string
+        xml:
+          name: StudentId
+      term:
+        type: string
+        xml:
+          name: Term
+      courseId:
+        type: string
+        xml:
+          name: CourseId
+      courseOfferNbr:
+        type: string
+        xml:
+          name: CourseOfferNbr
+      courseStatus:
+        type: string
+        xml:
+          name: CourseStatus
+      reporterId:
+        type: string
+        xml:
+          name: ReporterId
+      anotherContact:
+        type: string
+        xml:
+          name: AnotherContact
+      allegationSource:
+        type: string
+        xml:
+          name: AllegationSource
+      allegerId:
+        type: string
+        xml:
+          name: AllegerId
+      allegerGivenName:
+        type: string
+        xml:
+          name: AllegerGivenName
+      allegerLastName:
+        type: string
+        xml:
+          name: AllegerLastName
+      allegerEmail:
+        type: string
+        xml:
+          name: AllegerEmail
+      programGPA:
+        type: string
+        xml:
+          name: ProgramGPA
+      assessmentType:
+        type: string
+        xml:
+          name: AssessmentType
+      assessmentName:
+        type: string
+        xml:
+          name: AssessmentName
+      assessmentWeight:
+        type: string
+        xml:
+          name: AssessmentWeight
+      impactOfAssessment:
+        type: string
+        xml:
+          name: ImpactOfAssessment
+      dateAssignmentSubmitted:
+        type: string
+        xml:
+          name: DateAssignmentSubmitted
+      suspectedBreachType:
+        type: string
+        xml:
+          name: SuspectedBreachType
+      suspectedSubBreachCode:
+        type: string
+        xml:
+          name: SuspectedSubBreachCode
+      descriptionOfIncident:
+        type: string
+        xml:
+          name: DescriptionOfIncident
+      yearLevelOfStudent:
+        type: string
+        xml:
+          name: YearLevelOfStudent
+      specificDisciplinaryConventions:
+        type: string
+        xml:
+          name: SpecificDisciplinaryConventions
+      informationProvidedToStudent:
+        type: string
+        xml:
+          name: InformationProvidedToStudent
+      relevantCircumstances:
+        type: string
+        xml:
+          name: RelevantCircumstances
+      medical:
+        type: string
+        xml:
+          name: Medical
+      compassionate:
+        type: string
+        xml:
+          name: Compassionate
+      extenuating:
+        type: string
+        xml:
+          name: Extenuating
+      dateFormLodged:
+        type: string
+        xml:
+          name: DateFormLodged
+      additionalInfobeforeAIO1:
+        type: string
+        xml:
+          name: AdditionalInfobeforeAIO1
+      reasonForEdit:
+        type: string
+        xml:
+          name: ReasonForEdit
+      reasonText:
+        type: string
+        xml:
+          name: ReasonText
+      caseAssignment:
+        $ref: "#/definitions/CaseAssignment"
+      meetingDetails:
+        $ref: "#/definitions/MeetingDetails"
+      studentResponse:
+        $ref: "#/definitions/StudentResponseDetails"
+      outcome1:
+        $ref: "#/definitions/Outcome1"
+      outcome2:
+        $ref: "#/definitions/Outcome2"
+  CaseAssignment:
+    type: object
+    required:
+      - effectiveDate
+      - reassignAIO
+      - reassignReason
+      - confirmReporterName
+    properties:
+      effectiveDate:
+        type: string
+        xml:
+          name: EffectiveDate
+      reassignAIO:
+        type: string
+        xml:
+          name: ReassignAIO
+      reassignReason:
+        type: string
+        xml:
+          name: ReassignReason
+      confirmReporterName:
+        type: string
+        xml:
+          name: ConfirmReporterName
+      meetingDetails:
+        $ref: "#/definitions/MeetingDetails"
+  MeetingDetails:
+    type: object
+    required:
+      - timeline
+      - aIO1
+      - aIO2
+      - meetingType
+      - meetingDate
+      - meetingTime
+      - studentResponse
+      - studentAttend
+      - meetingLength
+      - confirmIndividualsAtMeeting
+      - aiPolicyExplained
+      - procedureExplained
+      - outcomeExplained
+      - airExplained
+      - appealsExplained
+      - ewo
+      - aiCounselling
+      - meetingNotes
+      - decisionMade
+      - breachType
+      - subBreach
+      - outcome
+      - outcomeReason
+      - subOutcome
+      - gradeAdjustment
+
+
+    properties:
+      timeline:
+        type: string
+        xml:
+          name: Timeline
+      aIO1:
+        type: string
+        xml:
+          name: AIO1
+      aIO2:
+        type: string
+        xml:
+          name: AIO2
+      meetingType:
+        type: string
+        xml:
+          name: MeetingType
+      meetingDate:
+        type: string
+        xml:
+          name: MeetingDate
+      meetingTime:
+        type: string
+        xml:
+          name: MeetingTime
+      studentResponse:
+        type: string
+        xml:
+          name: StudentResponse
+      studentAttend:
+        type: string
+        xml:
+          name: StudentAttend
+      meetingLength:
+        type: string
+        xml:
+          name: MeetingLength
+      confirmIndividualsAtMeeting:
+        type: string
+        xml:
+          name: ConfirmIndividualsAtMeeting
+      aiPolicyExplained:
+        type: string
+        xml:
+          name: AIPolicyExplained
+      procedureExplained:
+        type: string
+        xml:
+          name: ProcedureExplained
+      outcomeExplained:
+        type: string
+        xml:
+          name: OutcomeExplained
+      airExplained:
+        type: string
+        xml:
+          name: AIRExplained
+      appealsExplained:
+        type: string
+        xml:
+          name: AppealsExplained
+      ewo:
+        type: string
+        xml:
+          name: EWO
+      aiCounselling:
+        type: string
+        xml:
+          name: AICounselling
+      meetingNotes:
+        type: string
+        xml:
+          name: MeetingNotes
+      decisionMade:
+        type: string
+        xml:
+          name: DecisionMade
+      breachType:
+        type: string
+        xml:
+          name: BreachType
+      subBreach:
+        type: string
+        xml:
+          name: SubBreach
+      outcome:
+        type: string
+        xml:
+          name: Outcome
+      outcomeReason:
+        type: string
+        xml:
+          name: OutcomeReason
+      subOutcome:
+        type: string
+        xml:
+          name: SubOutcome
+      gradeAdjustment:
+        type: string
+        xml:
+          name: GradeAdjustment
+  StudentResponseDetails:
+    type: object
+    required:
+      - responseSelection
+      - rescheduleMeeting
+      - responseText
+    properties:
+      responseSelection:
+        type: string
+        xml:
+          name: ResponseSelection
+      rescheduleMeeting:
+        type: string
+        xml:
+          name: RescheduleMeeting
+      responseText:
+        type: string
+        xml:
+          name: ResponseText
+  Outcome1:
+    type: object
+    required:
+      - investigationNo
+      - noReason
+      - ccMessage
+      - counselling
+      - investigationYes
+      - seriousCase
+      - seriousCaseReason
+      - breachType
+      - subBreachType
+      - evidence
+    properties:
+      investigationNo:
+        type: string
+        xml:
+          name: InvestigationNo
+      noReason:
+        type: string
+        xml:
+          name: NoReason
+      ccMessage:
+        type: string
+        xml:
+          name: CCMessage
+      counselling:
+        type: string
+        xml:
+          name: Counselling
+      investigationYes:
+        type: string
+        xml:
+          name: InvestigationYes
+      seriousCase:
+        type: string
+        xml:
+          name: SeriousCase
+      seriousCaseReason:
+        type: string
+        xml:
+          name: SeriousCaseReason
+      breachType:
+        type: string
+        xml:
+          name: BreachType
+      subBreachType:
+        type: string
+        xml:
+          name: SubBreachType
+      evidence:
+        type: string
+        xml:
+          name: Evidence
+  Outcome2:
+    type: object
+    required:
+      - outcome
+      - noAcademicMisconductReason
+      - counselling
+      - breachType
+      - subOutcome
+      - gradeAdjustment
+      - resubmissionTask
+      - subBreachType
+      - outcomeReason
+      - referralReason
+      - additionalInfoForCC
+    properties:
+      outcome:
+        type: string
+        xml:
+          name: Outcome
+      noAcademicMisconductReason:
+        type: string
+        xml:
+          name: NoAcademicMisconductReason
+      counselling:
+        type: string
+        xml:
+          name: Counselling
+      breachType:
+        type: string
+        xml:
+          name: BreachType
+      subOutcome:
+        type: string
+        xml:
+          name: SubOutcome
+      gradeAdjustment:
+        type: string
+        xml:
+          name: GradeAdjustment
+      resubmissionTask:
+        type: string
+        xml:
+          name: ResubmissionTask
+      subBreachType:
+        type: string
+        xml:
+          name: SubBreachType
+      outcomeReason:
+        type: string
+        xml:
+          name: OutcomeReason
+      referralReason:
+        type: string
+        xml:
+          name: ReferralReason
+      additionalInfoForCC:
+        type: string
+        xml:
+          name: AdditionalInfoForCC    
+  ErrorMessage:
+    type: object
+    required:
+      - error
+    properties:
+      error:
+        type: string
+        xml:
+          name: Error
+
